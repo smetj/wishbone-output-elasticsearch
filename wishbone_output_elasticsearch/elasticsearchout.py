@@ -22,13 +22,13 @@
 #
 #
 
-from wishbone import Actor
+from wishbone.module import OutputModule
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
-from wishbone.event import Bulk
+from wishbone.event import extractBulkItems
 
 
-class ElasticSearchOut(Actor):
+class ElasticSearchOut(OutputModule):
 
     '''**Index data into Elasticsearch.**
 
@@ -68,25 +68,52 @@ class ElasticSearchOut(Actor):
 
     '''
 
-    def __init__(self, actor_config, selection="@data", hosts=["localhost:9200"], use_ssl=False, verify_certs=False, index="wishbone", doc_type="wishbone"):
-        Actor.__init__(self, actor_config)
+    def __init__(
+            self,
+            actor_config,
+            selection="data",
+            payload=None,
+            parallel_streams=1,
+            native_events=False,
+            hosts=["localhost:9200"],
+            use_ssl=False,
+            verify_certs=False,
+            index="wishbone",
+            doc_type="wishbone"):
+        OutputModule.__init__(self, actor_config)
         self.pool.createQueue("inbox")
         self.registerConsumer(self.consume, "inbox")
 
     def preHook(self):
-        self.elasticsearch = Elasticsearch(self.kwargs.hosts, use_ssl=self.kwargs.use_ssl, verify_certs=self.kwargs.verify_certs)
-        self.sendToBackground(self.__flushTimer)
+        self.elasticsearch = Elasticsearch(
+            self.kwargs.hosts,
+            use_ssl=self.kwargs.use_ssl,
+            verify_certs=self.kwargs.verify_certs
+        )
 
     def consume(self, event):
-
-        if isinstance(event, Bulk):
-            bulk(
-                self.elasticsearch,
-                [{"_index": self.kwargs.index, "_type": self.kwargs.doc_type, "_source": e.get(self.kwargs.selection)} for e in event.dumpFieldAsList(self.kwargs.selection)]
-            )
+        if event.isBulk():
+            bulk_items = []
+            for e in extractBulkItems(event):
+                kwargs = {
+                    "_index": self.kwargs.index,
+                    "_type": self.kwargs.doc_type
+                }
+                source = e.get(self.kwargs.selection)
+                if "_id" in source:
+                    kwargs["id"] = source.pop("_id")
+                kwargs['_source'] = source
+                bulk_items.append(kwargs)
+            resp = bulk(self.elasticsearch, bulk_items)
+            self.logging.debug("Indexed bulk: {}".format(resp))
         else:
-            self.elasticsearch.index(
-                index=self.kwargs.index,
-                doc_type=self.kwargs.doc_type,
-                body=str(event.get(self.kwargs.selection))
-            )
+            body = event.get(self.kwargs.selection)
+            kwargs = {
+                "index": self.kwargs.index,
+                "doc_type": self.kwargs.doc_type,
+            }
+            if "_id" in body:
+                kwargs["id"] = body.pop("_id")
+            kwargs['body'] = body
+            resp = self.elasticsearch.index(**kwargs)
+            self.logging.debug("Idexed: {}".format(resp))
