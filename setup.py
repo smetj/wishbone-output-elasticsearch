@@ -26,19 +26,19 @@ from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 import sys
 
-PROJECT = 'wishbone_output_elasticsearch'
-VERSION = '0.1.0'
 
-install_requires = [
-    'wishbone>=2.1.1',
-    'elasticsearch==2.3.0',
+PROJECT = 'wishbone_output_elasticsearch'
+VERSION = '0.2.0'
+INSTALL_REQUIRES = [
+    'wishbone>=3',
+    'elasticsearch',
 ]
 
 try:
     with open('README.md', 'rt') as f:
-        long_description = f.read()
+        DESCRIPTION = f.read()
 except IOError:
-    long_description = ''
+    DESCRIPTION = ''
 
 
 class PyTest(TestCommand):
@@ -58,7 +58,7 @@ setup(
     version=VERSION,
 
     description='A Wishbone output module to index data into Elasticsearch.',
-    long_description=long_description,
+    long_description=DESCRIPTION,
 
     author='Jelle Smet',
     author_email='development@smetj.net',
@@ -81,12 +81,12 @@ setup(
     cmdclass={'test': PyTest},
     scripts=[],
     provides=[],
-    install_requires=install_requires,
+    install_requires=INSTALL_REQUIRES,
     namespace_packages=[],
     packages=find_packages(),
     zip_safe=False,
     entry_points={
-        'wishbone.output': [
+        'wishbone.module.output': [
             'elasticsearch=wishbone_output_elasticsearch:ElasticSearchOut',
         ]
     }

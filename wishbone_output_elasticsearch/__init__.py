@@ -22,4 +22,4 @@
 #
 #
 
-from elasticsearchout import ElasticSearchOut
+from .elasticsearchout import ElasticSearchOut
