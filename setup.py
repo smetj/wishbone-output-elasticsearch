@@ -27,58 +27,52 @@ from setuptools.command.test import test as TestCommand
 import sys
 
 
-PROJECT = 'wishbone_output_elasticsearch'
-VERSION = '0.2.0'
-INSTALL_REQUIRES = [
-    'wishbone>=3',
-    'elasticsearch',
-]
+PROJECT = "wishbone_output_elasticsearch"
+VERSION = "1.0.0"
+INSTALL_REQUIRES = ["wishbone>=3", "elasticsearch"]
 
 try:
-    with open('README.md', 'rt') as f:
+    with open("README.md", "rt") as f:
         DESCRIPTION = f.read()
 except IOError:
-    DESCRIPTION = ''
+    DESCRIPTION = ""
 
 
 class PyTest(TestCommand):
-
     def finalize_options(self):
         TestCommand.finalize_options(self)
-        self.test_args = []
+        self.test_args = ["-x", "-v", "tests/default.py"]
         self.test_suite = True
 
     def run_tests(self):
         import pytest
+
         errcode = pytest.main(self.test_args)
         sys.exit(errcode)
+
 
 setup(
     name=PROJECT,
     version=VERSION,
-
-    description='A Wishbone output module to index data into Elasticsearch.',
+    description="A Wishbone output module to index data into Elasticsearch.",
     long_description=DESCRIPTION,
-
-    author='Jelle Smet',
-    author_email='development@smetj.net',
-
-    url='https://github.com/smetj/wishbone-output-elasticsearch',
-    download_url='https://github.com/smetj/wishbone-output-elasticsearch/tarball/master',
-    classifiers=['Development Status :: 5 - Production/Stable',
-                 'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
-                 'Programming Language :: Python',
-                 'Programming Language :: Python :: 2.7',
-                 'Programming Language :: Python :: Implementation :: PyPy',
-                 'Intended Audience :: Developers',
-                 'Intended Audience :: System Administrators',
-                 ],
-    extras_require={
-        'testing': ['pytest'],
-    },
-    platforms=['Linux'],
-    test_suite='tests.test_wishbone',
-    cmdclass={'test': PyTest},
+    author="Jelle Smet",
+    author_email="development@smetj.net",
+    url="https://github.com/smetj/wishbone-output-elasticsearch",
+    download_url="https://github.com/smetj/wishbone-output-elasticsearch/tarball/master",
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: Implementation :: PyPy",
+        "Intended Audience :: Developers",
+        "Intended Audience :: System Administrators",
+    ],
+    extras_require={"testing": ["pytest"]},
+    platforms=["Linux"],
+    test_suite="tests.test_wishbone",
+    cmdclass={"test": PyTest},
     scripts=[],
     provides=[],
     install_requires=INSTALL_REQUIRES,
@@ -86,8 +80,8 @@ setup(
     packages=find_packages(),
     zip_safe=False,
     entry_points={
-        'wishbone.module.output': [
-            'elasticsearch=wishbone_output_elasticsearch:ElasticSearchOut',
+        "wishbone.module.output": [
+            "elasticsearch=wishbone_output_elasticsearch:ElasticSearchOut"
         ]
-    }
+    },
 )
